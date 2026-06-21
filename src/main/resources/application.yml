@@ -1,0 +1,17 @@
+server:
+  port: 8080
+
+coach:
+  # Endpoint local que levanta el cliente de LoL durante la partida.
+  # Configurable por entorno: en Docker se apunta a host.docker.internal.
+  live-client-url: ${COACH_LIVE_CLIENT_URL:https://127.0.0.1:2999/liveclientdata}
+  # Cada cuánto consultamos el estado de la partida (barato, es local).
+  poll-interval-ms: ${COACH_POLL_INTERVAL_MS:5000}
+  # Throttle: nunca llamamos a Claude más seguido que esto.
+  min-seconds-between-advice: ${COACH_MIN_SECONDS_BETWEEN_ADVICE:15}
+  # Aunque no cambie nada "relevante", forzamos un consejo nuevo cada X segundos.
+  forced-advice-interval-seconds: ${COACH_FORCED_ADVICE_INTERVAL_SECONDS:60}
+
+anthropic:
+  # La API key se lee de la variable de entorno ANTHROPIC_API_KEY (no la pongas aquí).
+  model: ${ANTHROPIC_MODEL:claude-opus-4-8}

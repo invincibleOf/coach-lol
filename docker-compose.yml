@@ -1,0 +1,18 @@
+services:
+  coach-lol:
+    build: .
+    container_name: coach-lol
+    ports:
+      - "8080:8080"
+    environment:
+      # La API key se toma de tu .env (o de tu shell). No la pongas en claro aquí.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-4-8}
+      # OJO: dentro del contenedor 127.0.0.1 es el contenedor, no tu PC.
+      # host.docker.internal apunta a tu máquina anfitriona (donde corre LoL).
+      COACH_LIVE_CLIENT_URL: https://host.docker.internal:2999/liveclientdata
+    extra_hosts:
+      # En Docker Desktop (Mac/Windows) host.docker.internal ya existe;
+      # en Linux esta línea lo hace resolver al gateway del host.
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped

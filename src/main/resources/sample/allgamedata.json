@@ -1,0 +1,145 @@
+{
+  "activePlayer": {
+    "riotId": "Faker#KR1",
+    "summonerName": "Faker",
+    "currentGold": 1340,
+    "level": 11
+  },
+  "allPlayers": [
+    {
+      "riotId": "Faker#KR1",
+      "summonerName": "Faker",
+      "championName": "Ahri",
+      "team": "ORDER",
+      "position": "MIDDLE",
+      "level": 11,
+      "scores": { "kills": 3, "deaths": 2, "assists": 4, "creepScore": 142, "wardScore": 11.5 },
+      "items": [
+        { "itemID": 1056, "displayName": "Doran's Ring" },
+        { "itemID": 3020, "displayName": "Sorcerer's Shoes" },
+        { "itemID": 6655, "displayName": "Luden's Companion" }
+      ]
+    },
+    {
+      "riotId": "TopDiff#EUW",
+      "summonerName": "TopDiff",
+      "championName": "Garen",
+      "team": "ORDER",
+      "position": "TOP",
+      "level": 12,
+      "scores": { "kills": 4, "deaths": 1, "assists": 2, "creepScore": 160, "wardScore": 6.0 },
+      "items": [
+        { "itemID": 3071, "displayName": "Black Cleaver" },
+        { "itemID": 3047, "displayName": "Plated Steelcaps" }
+      ]
+    },
+    {
+      "riotId": "InseccPro#LAN",
+      "summonerName": "InseccPro",
+      "championName": "LeeSin",
+      "team": "ORDER",
+      "position": "JUNGLE",
+      "level": 11,
+      "scores": { "kills": 5, "deaths": 4, "assists": 6, "creepScore": 95, "wardScore": 18.0 },
+      "items": [
+        { "itemID": 3071, "displayName": "Black Cleaver" },
+        { "itemID": 3111, "displayName": "Mercury's Treads" }
+      ]
+    },
+    {
+      "riotId": "BoomBoom#NA1",
+      "summonerName": "BoomBoom",
+      "championName": "Jinx",
+      "team": "ORDER",
+      "position": "BOTTOM",
+      "level": 10,
+      "scores": { "kills": 2, "deaths": 3, "assists": 3, "creepScore": 158, "wardScore": 7.5 },
+      "items": [
+        { "itemID": 3094, "displayName": "Rapid Firecannon" },
+        { "itemID": 3006, "displayName": "Berserker's Greaves" }
+      ]
+    },
+    {
+      "riotId": "HookMaster#EUW",
+      "summonerName": "HookMaster",
+      "championName": "Thresh",
+      "team": "ORDER",
+      "position": "UTILITY",
+      "level": 9,
+      "scores": { "kills": 1, "deaths": 3, "assists": 8, "creepScore": 28, "wardScore": 33.0 },
+      "items": [
+        { "itemID": 3190, "displayName": "Locket of the Iron Solari" },
+        { "itemID": 3158, "displayName": "Ionian Boots of Lucidity" }
+      ]
+    },
+    {
+      "riotId": "DariusKing#BR1",
+      "summonerName": "DariusKing",
+      "championName": "Darius",
+      "team": "CHAOS",
+      "position": "TOP",
+      "level": 13,
+      "scores": { "kills": 5, "deaths": 2, "assists": 1, "creepScore": 175, "wardScore": 5.0 },
+      "items": [
+        { "itemID": 6692, "displayName": "Eclipse" },
+        { "itemID": 3047, "displayName": "Plated Steelcaps" },
+        { "itemID": 3053, "displayName": "Sterak's Gage" }
+      ]
+    },
+    {
+      "riotId": "BugUser#KR1",
+      "summonerName": "BugUser",
+      "championName": "Khazix",
+      "team": "CHAOS",
+      "position": "JUNGLE",
+      "level": 12,
+      "scores": { "kills": 7, "deaths": 3, "assists": 4, "creepScore": 110, "wardScore": 16.0 },
+      "items": [
+        { "itemID": 6692, "displayName": "Eclipse" },
+        { "itemID": 3158, "displayName": "Ionian Boots of Lucidity" },
+        { "itemID": 6694, "displayName": "Serylda's Grudge" }
+      ]
+    },
+    {
+      "riotId": "ShadowStep#NA1",
+      "summonerName": "ShadowStep",
+      "championName": "Zed",
+      "team": "CHAOS",
+      "position": "MIDDLE",
+      "level": 12,
+      "scores": { "kills": 6, "deaths": 2, "assists": 3, "creepScore": 158, "wardScore": 8.0 },
+      "items": [
+        { "itemID": 6692, "displayName": "Eclipse" },
+        { "itemID": 3142, "displayName": "Youmuu's Ghostblade" },
+        { "itemID": 3047, "displayName": "Plated Steelcaps" }
+      ]
+    },
+    {
+      "riotId": "HeadshotQ#EUW",
+      "summonerName": "HeadshotQ",
+      "championName": "Caitlyn",
+      "team": "CHAOS",
+      "position": "BOTTOM",
+      "level": 11,
+      "scores": { "kills": 4, "deaths": 2, "assists": 5, "creepScore": 172, "wardScore": 9.0 },
+      "items": [
+        { "itemID": 6672, "displayName": "Kraken Slayer" },
+        { "itemID": 3006, "displayName": "Berserker's Greaves" },
+        { "itemID": 3094, "displayName": "Rapid Firecannon" }
+      ]
+    },
+    {
+      "riotId": "PixHelper#OCE",
+      "summonerName": "PixHelper",
+      "championName": "Lulu",
+      "team": "CHAOS",
+      "position": "UTILITY",
+      "level": 10,
+      "scores": { "kills": 0, "deaths": 2, "assists": 11, "creepScore": 30, "wardScore": 35.0 },
+      "items": [
+        { "itemID": 6617, "displayName": "Moonstone Renewer" },
+        { "itemID": 3158, "displayName": "Ionian Boots of Lucidity" }
+      ]
+    }
+  ]
+}

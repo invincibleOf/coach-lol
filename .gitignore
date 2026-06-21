@@ -1,0 +1,24 @@
+# Build / Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+build/
+HELP.md
+
+# Logs
+*.log
+logs/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# Secrets / entorno local
+.env
+
+# OS
+.DS_Store

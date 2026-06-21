@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coach LoL — Overlay</title>
+    <style>
+        :root { color-scheme: dark; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Segoe UI", system-ui, sans-serif;
+            background: rgba(8, 11, 16, 0.94);
+            color: #e8eef5;
+        }
+        #panel { padding: 14px 16px; max-width: 440px; }
+        #header {
+            display: flex; align-items: center; gap: 8px;
+            font-weight: 700; font-size: 14px; letter-spacing: .4px;
+            text-transform: uppercase; color: #7fd1ff; margin-bottom: 12px;
+        }
+        #status { width: 9px; height: 9px; border-radius: 50%; background: #ff5a5a; }
+        #status.connected { background: #43d17a; }
+
+        /* Tira de items recomendados (iconos) */
+        #items { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        #items:empty { display: none; }
+        .item-chip {
+            display: flex; align-items: center; gap: 6px;
+            background: rgba(240, 180, 41, 0.10);
+            border: 1px solid rgba(240, 180, 41, 0.30);
+            border-radius: 6px; padding: 4px 8px; font-size: 12px;
+        }
+        .item-chip img { width: 26px; height: 26px; border-radius: 4px; display: block; }
+        .item-chip span { color: #ffd166; }
+
+        /* Tarjetas de consejo */
+        .card {
+            background: rgba(255, 255, 255, 0.04);
+            border-left: 3px solid #5a6b82;
+            border-radius: 8px; padding: 10px 12px; margin-bottom: 10px;
+        }
+        .card-title { font-size: 13px; font-weight: 700; margin-bottom: 5px; letter-spacing: .2px; }
+        .card-body { font-size: 14px; line-height: 1.5; color: #d6deea; }
+        .card-body strong { color: #ffffff; font-weight: 700; }
+
+        .card.amber  { border-left-color: #f0b429; }
+        .card.amber  .card-title { color: #ffd166; }
+        .card.blue   { border-left-color: #4a9eff; }
+        .card.blue   .card-title { color: #8fc7ff; }
+        .card.green  { border-left-color: #43d17a; }
+        .card.green  .card-title { color: #7ee2a8; }
+        .card.neutral .card-title { color: #c2ccd9; }
+
+        #empty { color: #8a97a8; font-style: italic; font-size: 14px; }
+        #ts { margin-top: 6px; font-size: 11px; color: #6b7891; }
+    </style>
+</head>
+<body>
+    <div id="panel">
+        <div id="header"><span id="status"></span> Coach LoL</div>
+        <div id="items"></div>
+        <div id="cards"><div id="empty">Esperando partida…</div></div>
+        <div id="ts"></div>
+    </div>
+
+    <script>
+        const statusEl = document.getElementById('status');
+        const itemsEl = document.getElementById('items');
+        const cardsEl = document.getElementById('cards');
+        const tsEl = document.getElementById('ts');
+
+        function escapeHtml(s) {
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // Markdown mínimo: **negrita** y saltos de línea.
+        function renderInline(s) {
+            return escapeHtml(s)
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\n/g, '<br>');
+        }
+
+        function accentFor(title) {
+            const t = title.toLowerCase();
+            if (t.includes('build') || title.includes('🛒')) return 'amber';
+            if (t.includes('línea') || t.includes('linea') || title.includes('🛣')) return 'blue';
+            if (t.includes('equipo') || title.includes('🤝')) return 'green';
+            return 'neutral';
+        }
+
+        function buildCard(title, body, accent) {
+            const card = document.createElement('div');
+            card.className = 'card ' + accent;
+            if (title) {
+                const h = document.createElement('div');
+                h.className = 'card-title';
+                h.innerHTML = renderInline(title);
+                card.appendChild(h);
+            }
+            const b = document.createElement('div');
+            b.className = 'card-body';
+            b.innerHTML = renderInline(body);
+            card.appendChild(b);
+            return card;
+        }
+
+        function renderCards(advice) {
+            cardsEl.innerHTML = '';
+            if (!advice.includes('###')) {
+                cardsEl.appendChild(buildCard('', advice.trim(), 'neutral'));
+                return;
+            }
+            const sections = advice.split(/\n?###\s+/).map(s => s.trim()).filter(Boolean);
+            for (const section of sections) {
+                const nl = section.indexOf('\n');
+                const title = nl === -1 ? section : section.slice(0, nl).trim();
+                const body = nl === -1 ? '' : section.slice(nl + 1).trim();
+                cardsEl.appendChild(buildCard(title, body, accentFor(title)));
+            }
+        }
+
+        function renderItems(items) {
+            itemsEl.innerHTML = '';
+            for (const it of items || []) {
+                const chip = document.createElement('div');
+                chip.className = 'item-chip';
+
+                const img = document.createElement('img');
+                img.src = it.icon;
+                img.alt = it.name;
+                img.title = it.name;
+                img.onerror = () => { img.style.display = 'none'; }; // por si falta la imagen
+
+                const span = document.createElement('span');
+                span.textContent = it.name;
+
+                chip.appendChild(img);
+                chip.appendChild(span);
+                itemsEl.appendChild(chip);
+            }
+        }
+
+        const source = new EventSource('/api/advice/stream');
+        source.onopen = () => statusEl.classList.add('connected');
+        source.onerror = () => statusEl.classList.remove('connected');
+        source.addEventListener('advice', (event) => {
+            let payload;
+            try {
+                payload = JSON.parse(event.data);
+            } catch (e) {
+                payload = { advice: event.data, items: [] }; // por si llega texto plano
+            }
+            renderItems(payload.items);
+            renderCards(payload.advice || '');
+            tsEl.textContent = 'Actualizado: ' + new Date().toLocaleTimeString();
+        });
+    </script>
+</body>
+</html>
