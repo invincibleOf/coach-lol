@@ -49,7 +49,7 @@ public class DevTestController {
         }
 
         String summary = mapper.summarize(data);
-        String advice = coachService.coach(summary);
+        String advice = coachService.coach(summary, null); // sin consejo previo en la prueba
         broadcaster.broadcast(advice); // se empuja al overlay igual que en partida real
         return advice;
     }

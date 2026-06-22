@@ -30,6 +30,7 @@ public class CoachScheduler {
 
     private String lastSignature = "";
     private Instant lastAdviceAt = Instant.EPOCH;
+    private String lastAdvice = "";
 
     public CoachScheduler(LiveClientService liveClient,
                           GameStateMapper mapper,
@@ -49,7 +50,10 @@ public class CoachScheduler {
     public void tick() {
         Optional<JsonNode> dataOpt = liveClient.fetchAllGameData();
         if (dataOpt.isEmpty()) {
-            return; // no hay partida en curso; no hacemos nada
+            // Sin partida: limpiamos el estado para que la próxima empiece sin anclar
+            // un consejo viejo y dé su primer consejo cuanto antes.
+            resetState();
+            return;
         }
         JsonNode data = dataOpt.get();
 
@@ -71,14 +75,21 @@ public class CoachScheduler {
 
         try {
             String summary = mapper.summarize(data);
-            String advice = coachService.coach(summary);
+            String advice = coachService.coach(summary, lastAdvice); // anclamos al consejo previo
             broadcaster.broadcast(advice);
 
             lastSignature = signature;
             lastAdviceAt = now;
+            lastAdvice = advice;
         } catch (Exception ex) {
             // Una llamada fallida (rate limit, red) no debe tumbar el poller.
             System.err.println("[CoachScheduler] Error generando consejo: " + ex.getMessage());
         }
+    }
+
+    private void resetState() {
+        lastSignature = "";
+        lastAdviceAt = Instant.EPOCH;
+        lastAdvice = "";
     }
 }

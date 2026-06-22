@@ -5,6 +5,7 @@ import com.anthropic.client.okhttp.AnthropicOkHttpClient;
 import com.anthropic.models.messages.CacheControlEphemeral;
 import com.anthropic.models.messages.Message;
 import com.anthropic.models.messages.MessageCreateParams;
+import com.anthropic.models.messages.OutputConfig;
 import com.anthropic.models.messages.TextBlockParam;
 import com.anthropic.models.messages.ThinkingConfigAdaptive;
 import com.coachlol.datadragon.DataDragonService;
@@ -53,7 +54,8 @@ public class CoachService {
             Una acción concreta para aportar al equipo en los próximos minutos.
 
             No expliques teoría general ni des clases: instrucciones directas para ESTA
-            situación.
+            situación. Prioriza la CONSISTENCIA: si la situación no ha cambiado de forma
+            relevante respecto a tu consejo anterior, mantén la misma recomendación de item.
             """;
 
     // La API key se lee de ANTHROPIC_API_KEY del entorno.
@@ -73,17 +75,23 @@ public class CoachService {
         System.out.println("[CoachService] Modelo configurado: " + model);
     }
 
-    public String coach(String gameStateSummary) {
+    /**
+     * @param previousAdvice consejo anterior (puede ser null/vacío). Se le pasa al
+     *                       modelo para anclar la recomendación y evitar el flip-flop.
+     */
+    public String coach(String gameStateSummary, String previousAdvice) {
         MessageCreateParams params = MessageCreateParams.builder()
                 .model(model)
                 .maxTokens(1024L)
                 .thinking(ThinkingConfigAdaptive.builder().build())
+                // effort bajo: el consejo es táctico y breve; ahorra tokens de pensamiento.
+                .outputConfig(OutputConfig.builder().effort(OutputConfig.Effort.LOW).build())
                 .systemOfTextBlockParams(List.of(
                         TextBlockParam.builder()
                                 .text(buildSystemPrompt())
                                 .cacheControl(CacheControlEphemeral.builder().build())
                                 .build()))
-                .addUserMessage("Estado actual de la partida:\n" + gameStateSummary)
+                .addUserMessage(buildUserMessage(gameStateSummary, previousAdvice))
                 .build();
 
         Message response = client.messages().create(params);
@@ -93,6 +101,18 @@ public class CoachService {
                 .map(text -> text.text())
                 .collect(Collectors.joining("\n"))
                 .trim();
+    }
+
+    private String buildUserMessage(String gameStateSummary, String previousAdvice) {
+        StringBuilder sb = new StringBuilder("Estado actual de la partida:\n")
+                .append(gameStateSummary);
+        if (previousAdvice != null && !previousAdvice.isBlank()) {
+            sb.append("\n\nTu consejo anterior (mantén la MISMA recomendación de item salvo")
+              .append(" que la situación haya cambiado de forma relevante; no cambies por")
+              .append(" variaciones menores):\n")
+              .append(previousAdvice);
+        }
+        return sb.toString();
     }
 
     /**

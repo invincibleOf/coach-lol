@@ -51,18 +51,44 @@ public class GameStateMapper {
     }
 
     /**
-     * Firma del estado "relevante": niveles, muertes e items de cada jugador.
-     * Si cambia, es que pasó algo digno de re-analizar (subida de nivel, muerte,
-     * item completado).
+     * Firma del estado "relevante para TU decisión". Cambia (y por tanto dispara un
+     * nuevo análisis) solo cuando pasa algo que afecta a tu build o a tu jugada:
+     *  - tu nivel o tu nº de items (subes de nivel / compras),
+     *  - tu oro por tramos de 500 (cruzas un umbral de compra),
+     *  - los items del ENEMIGO (counter-build),
+     *  - una muerte/asesinato en la partida (resultado de pelea).
+     * Ya NO reacciona a cada micro-cambio de los 10 jugadores.
      */
     public String signature(JsonNode data) {
-        StringBuilder sb = new StringBuilder();
+        JsonNode active = data.path("activePlayer");
+        String myName = playerName(active);
+        long goldBucket = active.path("currentGold").asLong() / 500;
+
+        String myTeam = null;
         for (JsonNode p : data.path("allPlayers")) {
-            sb.append(p.path("level").asInt()).append(':')
-              .append(p.path("scores").path("deaths").asInt()).append(':')
-              .append(p.path("items").size()).append('|');
+            if (playerName(p).equalsIgnoreCase(myName)) {
+                myTeam = p.path("team").asText();
+                break;
+            }
         }
-        return sb.toString();
+
+        int myLevel = 0;
+        int myItems = 0;
+        int enemyItems = 0;
+        int totalKills = 0;
+        for (JsonNode p : data.path("allPlayers")) {
+            totalKills += p.path("scores").path("kills").asInt();
+            if (playerName(p).equalsIgnoreCase(myName)) {
+                myLevel = p.path("level").asInt();
+                myItems = p.path("items").size();
+            } else if (myTeam != null && !p.path("team").asText().equals(myTeam)) {
+                enemyItems += p.path("items").size();
+            }
+        }
+
+        return "me:" + myLevel + ":" + myItems + ":g" + goldBucket
+                + "|enemyItems:" + enemyItems
+                + "|kills:" + totalKills;
     }
 
     private String playerName(JsonNode player) {
