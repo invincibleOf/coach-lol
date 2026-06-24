@@ -37,6 +37,12 @@ public class CoachService {
             equipos, y tu oro disponible. El oro del enemigo NO está disponible: estímalo
             por sus items, CS y nivel.
 
+            El estado viene separado en dos bloques: TU EQUIPO (ALIADOS) y EQUIPO ENEMIGO.
+            Tu build defensiva debe contrarrestar SOLO a campeones del EQUIPO ENEMIGO.
+            NUNCA recomiendes items para contrarrestar a un aliado de tu propio equipo.
+            Cuando justifiques una compra por una amenaza, esa amenaza debe ser un campeón
+            del EQUIPO ENEMIGO, nombrándolo explícitamente.
+
             Responde SIEMPRE en español y con ESTE FORMATO EXACTO de secciones markdown,
             sin ningún texto antes ni después y sin añadir otras secciones. Cada sección
             es muy breve (1-2 frases). Usa **negrita** SOLO para el nombre del item y su

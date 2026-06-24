@@ -2,6 +2,7 @@ package com.coachlol.liveclient;
 
 import com.coachlol.datadragon.DataDragonService;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.MissingNode;
 import org.springframework.stereotype.Component;
 
 /**
@@ -27,17 +28,41 @@ public class GameStateMapper {
         String myName = playerName(active);
         long myGold = active.path("currentGold").asLong();
 
+        // Determinamos PRIMERO tu jugador dentro de allPlayers: activePlayer NO trae
+        // championName ni team, solo riotId/oro. De tu entrada en allPlayers sacamos el
+        // equipo (ORDER/CHAOS) y el campeón. Así etiquetamos a cada jugador como ALIADO o
+        // ENEMIGO de forma explícita y el modelo no recomienda counters contra aliados.
+        JsonNode me = playerByName(data, myName);
+        String myTeam = me.path("team").asText();
+        String myChampion = me.path("championName").asText();
+
         StringBuilder sb = new StringBuilder();
-        sb.append("Tu oro disponible ahora mismo: ").append(myGold).append("\n");
-        sb.append("Jugadores (equipo | campeón | nivel | KDA | CS | items):\n");
+        sb.append("Tu campeón: ").append(myChampion)
+          .append(" (eres del equipo ").append(myTeam).append(")\n");
+        sb.append("Tu oro disponible ahora mismo: ").append(myGold).append("\n\n");
 
+        sb.append("TU EQUIPO (ALIADOS — NO compres items para contrarrestarlos):\n");
+        appendPlayers(sb, data, myName, myTeam, true);
+
+        sb.append("\nEQUIPO ENEMIGO (las amenazas a contrarrestar con tu build):\n");
+        appendPlayers(sb, data, myName, myTeam, false);
+
+        return sb.toString();
+    }
+
+    /** Añade las filas de los jugadores del bando pedido (aliado si {@code allies}). */
+    private void appendPlayers(StringBuilder sb, JsonNode data, String myName,
+                               String myTeam, boolean allies) {
         for (JsonNode p : data.path("allPlayers")) {
-            String name = playerName(p);
-            boolean isMe = name.equalsIgnoreCase(myName);
+            String team = p.path("team").asText();
+            boolean isAlly = team.equals(myTeam);
+            if (isAlly != allies) {
+                continue;
+            }
+            boolean isMe = playerName(p).equalsIgnoreCase(myName);
 
-            sb.append("- ").append(p.path("team").asText())   // ORDER o CHAOS
-              .append(isMe ? " (TÚ)" : "")
-              .append(" | ").append(p.path("championName").asText())
+            sb.append("- ").append(isMe ? "TÚ → " : "")
+              .append(p.path("championName").asText())
               .append(" | nivel ").append(p.path("level").asInt())
               .append(" | KDA ")
               .append(p.path("scores").path("kills").asInt()).append("/")
@@ -47,7 +72,16 @@ public class GameStateMapper {
               .append(" | items: ").append(itemList(p))
               .append("\n");
         }
-        return sb.toString();
+    }
+
+    /** Devuelve la entrada de allPlayers cuyo nombre coincide, o un nodo vacío si no. */
+    private JsonNode playerByName(JsonNode data, String name) {
+        for (JsonNode p : data.path("allPlayers")) {
+            if (playerName(p).equalsIgnoreCase(name)) {
+                return p;
+            }
+        }
+        return MissingNode.getInstance();
     }
 
     /**
@@ -64,13 +98,7 @@ public class GameStateMapper {
         String myName = playerName(active);
         long goldBucket = active.path("currentGold").asLong() / 500;
 
-        String myTeam = null;
-        for (JsonNode p : data.path("allPlayers")) {
-            if (playerName(p).equalsIgnoreCase(myName)) {
-                myTeam = p.path("team").asText();
-                break;
-            }
-        }
+        String myTeam = playerByName(data, myName).path("team").asText();
 
         int myLevel = 0;
         int myItems = 0;
@@ -81,7 +109,7 @@ public class GameStateMapper {
             if (playerName(p).equalsIgnoreCase(myName)) {
                 myLevel = p.path("level").asInt();
                 myItems = p.path("items").size();
-            } else if (myTeam != null && !p.path("team").asText().equals(myTeam)) {
+            } else if (!myTeam.isEmpty() && !p.path("team").asText().equals(myTeam)) {
                 enemyItems += p.path("items").size();
             }
         }
