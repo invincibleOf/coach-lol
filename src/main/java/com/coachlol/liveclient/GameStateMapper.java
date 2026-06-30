@@ -35,10 +35,16 @@ public class GameStateMapper {
         JsonNode me = playerByName(data, myName);
         String myTeam = me.path("team").asText();
         String myChampion = me.path("championName").asText();
+        String myRole = role(me);
 
         StringBuilder sb = new StringBuilder();
         sb.append("Tu campeón: ").append(myChampion)
-          .append(" (eres del equipo ").append(myTeam).append(")\n");
+          .append(" | tu rol/línea: ").append(myRole)
+          .append(" | tu equipo: ").append(myTeam).append("\n");
+        sb.append("Recomienda la build PROPIA de un ").append(myChampion)
+          .append(" jugando ").append(myRole)
+          .append(" (p. ej. una jungla compra objeto de jungla y prioriza su patrón")
+          .append(" de farmeo/ganks; no la build de otra línea).\n");
         sb.append("Tu oro disponible ahora mismo: ").append(myGold).append("\n\n");
 
         sb.append("TU EQUIPO (ALIADOS — NO compres items para contrarrestarlos):\n");
@@ -63,6 +69,7 @@ public class GameStateMapper {
 
             sb.append("- ").append(isMe ? "TÚ → " : "")
               .append(p.path("championName").asText())
+              .append(" (").append(role(p)).append(")")
               .append(" | nivel ").append(p.path("level").asInt())
               .append(" | KDA ")
               .append(p.path("scores").path("kills").asInt()).append("/")
@@ -72,6 +79,23 @@ public class GameStateMapper {
               .append(" | items: ").append(itemList(p))
               .append("\n");
         }
+    }
+
+    /**
+     * Rol/línea legible del jugador a partir del campo "position" de la Live Client API
+     * (TOP/JUNGLE/MIDDLE/BOTTOM/UTILITY). Puede venir vacío en algunos modos; ahí
+     * devolvemos "rol desconocido" para que el modelo no asuma una línea equivocada.
+     */
+    private String role(JsonNode player) {
+        String pos = player.path("position").asText("");
+        return switch (pos) {
+            case "TOP" -> "Top";
+            case "JUNGLE" -> "Jungla";
+            case "MIDDLE" -> "Mid";
+            case "BOTTOM" -> "ADC (bot)";
+            case "UTILITY" -> "Support";
+            default -> "rol desconocido";
+        };
     }
 
     /** Devuelve la entrada de allPlayers cuyo nombre coincide, o un nodo vacío si no. */

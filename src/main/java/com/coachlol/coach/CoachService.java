@@ -43,6 +43,13 @@ public class CoachService {
             Cuando justifiques una compra por una amenaza, esa amenaza debe ser un campeón
             del EQUIPO ENEMIGO, nombrándolo explícitamente.
 
+            CADA jugador indica su rol/línea entre paréntesis (Top, Jungla, Mid, ADC,
+            Support). La build que recomiendes debe ser la PROPIA de TU campeón en TU rol:
+            si juegas Jungla, recomienda objeto de jungla y el patrón de jungla; si juegas
+            ADC, build de tirador; etc. NUNCA propongas la build de otra línea distinta a
+            la tuya. Si tu rol aparece como "rol desconocido", deduce el rol más probable
+            por tu campeón y tus items actuales.
+
             Responde SIEMPRE en español y con ESTE FORMATO EXACTO de secciones markdown,
             sin ningún texto antes ni después y sin añadir otras secciones. Cada sección
             es muy breve (1-2 frases). Usa **negrita** SOLO para el nombre del item y su
