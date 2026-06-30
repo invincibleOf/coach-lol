@@ -5,9 +5,14 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # La API key se toma de tu .env (o de tu shell). No la pongas en claro aquí.
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      # Proveedor de IA: anthropic (por defecto) u openai.
+      COACH_LLM_PROVIDER: ${COACH_LLM_PROVIDER:-anthropic}
+      # Las API keys se toman de tu .env (o de tu shell). No las pongas en claro aquí.
+      # Solo necesitas la del proveedor que vayas a usar.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-4-8}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o}
       # OJO: dentro del contenedor 127.0.0.1 es el contenedor, no tu PC.
       # host.docker.internal apunta a tu máquina anfitriona (donde corre LoL).
       COACH_LIVE_CLIENT_URL: https://host.docker.internal:2999/liveclientdata

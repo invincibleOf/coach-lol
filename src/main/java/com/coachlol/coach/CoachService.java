@@ -1,32 +1,18 @@
 package com.coachlol.coach;
 
-import com.anthropic.client.AnthropicClient;
-import com.anthropic.client.okhttp.AnthropicOkHttpClient;
-import com.anthropic.models.messages.CacheControlEphemeral;
-import com.anthropic.models.messages.Message;
-import com.anthropic.models.messages.MessageCreateParams;
-import com.anthropic.models.messages.OutputConfig;
-import com.anthropic.models.messages.TextBlockParam;
-import com.anthropic.models.messages.ThinkingConfigAdaptive;
 import com.coachlol.datadragon.DataDragonService;
+import com.coachlol.llm.LlmClient;
 import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 /**
- * Núcleo de IA: recibe el resumen del estado de la partida y pide a Claude un
- * consejo breve y accionable.
+ * Núcleo de IA: recibe el resumen del estado de la partida y pide al proveedor de IA
+ * (vía {@link LlmClient}) un consejo breve y accionable.
  *
- * Decisiones de diseño:
- *  - Adaptive thinking: en Opus 4.6+ es lo idiomático; Claude decide cuánto razonar.
- *    El antiguo budget_tokens da error 400 en Opus 4.8.
- *  - System prompt = instrucciones FIJAS + catálogo de items del parche (estable
- *    durante todo el parche). Va con cache_control: al ser un prefijo estable byte
- *    a byte, las llamadas repetidas durante la partida reutilizan la caché y abaratan
- *    mucho el coste. El estado VOLÁTIL de la partida va en el mensaje de usuario.
+ * Esta clase es AGNÓSTICA del proveedor: construye el prompt de sistema (instrucciones
+ * FIJAS + catálogo de items del parche, estable durante todo el parche) y el mensaje de
+ * usuario (estado VOLÁTIL de la partida), y delega la llamada al modelo en LlmClient.
+ * Qué proveedor se usa (Anthropic / OpenAI) se decide por coach.llm.provider.
  */
 @Service
 public class CoachService {
@@ -71,21 +57,17 @@ public class CoachService {
             relevante respecto a tu consejo anterior, mantén la misma recomendación de item.
             """;
 
-    // La API key se lee de ANTHROPIC_API_KEY del entorno.
-    private final AnthropicClient client = AnthropicOkHttpClient.fromEnv();
-
     private final DataDragonService dataDragon;
+    private final LlmClient llm;
 
-    @Value("${anthropic.model}")
-    private String model;
-
-    public CoachService(DataDragonService dataDragon) {
+    public CoachService(DataDragonService dataDragon, LlmClient llm) {
         this.dataDragon = dataDragon;
+        this.llm = llm;
     }
 
     @PostConstruct
-    void logModel() {
-        System.out.println("[CoachService] Modelo configurado: " + model);
+    void logProvider() {
+        System.out.println("[CoachService] Proveedor de IA: " + llm.describe());
     }
 
     /**
@@ -93,27 +75,9 @@ public class CoachService {
      *                       modelo para anclar la recomendación y evitar el flip-flop.
      */
     public String coach(String gameStateSummary, String previousAdvice) {
-        MessageCreateParams params = MessageCreateParams.builder()
-                .model(model)
-                .maxTokens(1024L)
-                .thinking(ThinkingConfigAdaptive.builder().build())
-                // effort bajo: el consejo es táctico y breve; ahorra tokens de pensamiento.
-                .outputConfig(OutputConfig.builder().effort(OutputConfig.Effort.LOW).build())
-                .systemOfTextBlockParams(List.of(
-                        TextBlockParam.builder()
-                                .text(buildSystemPrompt())
-                                .cacheControl(CacheControlEphemeral.builder().build())
-                                .build()))
-                .addUserMessage(buildUserMessage(gameStateSummary, previousAdvice))
-                .build();
-
-        Message response = client.messages().create(params);
-
-        return response.content().stream()
-                .flatMap(block -> block.text().stream())  // ContentBlock -> Optional<TextBlock>
-                .map(text -> text.text())
-                .collect(Collectors.joining("\n"))
-                .trim();
+        return llm.generate(
+                buildSystemPrompt(),
+                buildUserMessage(gameStateSummary, previousAdvice));
     }
 
     private String buildUserMessage(String gameStateSummary, String previousAdvice) {

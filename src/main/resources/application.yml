@@ -2,6 +2,10 @@ server:
   port: 8080
 
 coach:
+  # Proveedor de IA: "anthropic" (por defecto) u "openai". Cambiar de proveedor es solo
+  # cambiar esta variable (y tener la API key del proveedor elegido en el entorno).
+  llm:
+    provider: ${COACH_LLM_PROVIDER:anthropic}
   # Endpoint local que levanta el cliente de LoL durante la partida.
   # Configurable por entorno: en Docker se apunta a host.docker.internal.
   live-client-url: ${COACH_LIVE_CLIENT_URL:https://127.0.0.1:2999/liveclientdata}
@@ -15,3 +19,10 @@ coach:
 anthropic:
   # La API key se lee de la variable de entorno ANTHROPIC_API_KEY (no la pongas aquí).
   model: ${ANTHROPIC_MODEL:claude-opus-4-8}
+
+openai:
+  # Solo se usa si coach.llm.provider=openai. La API key NO se pone aquí: va en OPENAI_API_KEY.
+  api-key: ${OPENAI_API_KEY:}
+  model: ${OPENAI_MODEL:gpt-4o}
+  # Cambia base-url para endpoints compatibles (Azure OpenAI, OpenRouter, etc.).
+  base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}

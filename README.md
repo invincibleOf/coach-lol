@@ -63,15 +63,30 @@ durante la partida.
 ## Requisitos
 
 - **Java 17** y **Maven** (o solo **Docker**, que compila por ti).
-- Una **API key de Anthropic** (`ANTHROPIC_API_KEY`).
+- Una **API key** del proveedor de IA que vayas a usar: **Anthropic** (`ANTHROPIC_API_KEY`,
+  por defecto) **u OpenAI** (`OPENAI_API_KEY`).
 - El **cliente de League of Legends** corriendo, en una partida (la Live Client Data
   API solo existe durante la partida).
 
-## Configuración
+## Proveedor de IA (Anthropic u OpenAI)
 
-Copia `.env.example` a `.env` y rellena tu key:
+El coach funciona igual con cualquiera de los dos proveedores; se elige con la variable
+`COACH_LLM_PROVIDER` (`anthropic` por defecto, u `openai`). Solo necesitas la API key del
+proveedor elegido. Internamente ambos implementan la misma interfaz `LlmClient`
+(`src/main/java/com/coachlol/llm`), así que el resto de la app no cambia.
 
 ```env
+# Usar OpenAI en vez de Anthropic:
+COACH_LLM_PROVIDER=openai
+OPENAI_API_KEY=sk-...
+```
+
+## Configuración
+
+Copia `.env.example` a `.env` y rellena la key del proveedor que uses:
+
+```env
+COACH_LLM_PROVIDER=anthropic
 ANTHROPIC_API_KEY=sk-ant-...
 # Opcional: cambiar de modelo (por defecto claude-opus-4-8)
 # ANTHROPIC_MODEL=claude-opus-4-8
@@ -81,11 +96,15 @@ Variables de entorno disponibles (ver `src/main/resources/application.yml`):
 
 | Variable | Por defecto | Descripción |
 |----------|-------------|-------------|
-| `ANTHROPIC_API_KEY` | — | Tu API key de Anthropic (obligatoria). |
+| `COACH_LLM_PROVIDER` | `anthropic` | Proveedor de IA: `anthropic` u `openai`. |
+| `ANTHROPIC_API_KEY` | — | API key de Anthropic (obligatoria si el proveedor es `anthropic`). |
 | `ANTHROPIC_MODEL` | `claude-opus-4-8` | Modelo de Claude a usar. |
+| `OPENAI_API_KEY` | — | API key de OpenAI (obligatoria si el proveedor es `openai`). |
+| `OPENAI_MODEL` | `gpt-4o` | Modelo de OpenAI a usar. |
+| `OPENAI_BASE_URL` | `https://api.openai.com/v1` | Endpoint de OpenAI (cámbialo para Azure/OpenRouter/etc.). |
 | `COACH_LIVE_CLIENT_URL` | `https://127.0.0.1:2999/liveclientdata` | Endpoint local del cliente de LoL. |
 | `COACH_POLL_INTERVAL_MS` | `5000` | Cada cuánto se consulta el estado de la partida. |
-| `COACH_MIN_SECONDS_BETWEEN_ADVICE` | `45` | Throttle mínimo entre llamadas a Claude. |
+| `COACH_MIN_SECONDS_BETWEEN_ADVICE` | `45` | Throttle mínimo entre llamadas al modelo. |
 | `COACH_FORCED_ADVICE_INTERVAL_SECONDS` | `180` | Refresco forzado aunque no cambie nada relevante. |
 
 ## Ejecución
@@ -115,17 +134,18 @@ http://localhost:8080/overlay.html
 
 Hay un endpoint de prueba que usa una partida de ejemplo
 (`src/main/resources/sample/allgamedata.json`) y recorre el mismo pipeline real
-(mapper → Claude → SSE), de modo que el overlay se actualiza igual que en partida:
+(mapper → modelo → SSE), de modo que el overlay se actualiza igual que en partida:
 
 ```bash
 curl -X POST http://localhost:8080/api/advice/test
 ```
 
-> ⚠️ Esto hace una llamada **real y facturable** a la API de Anthropic.
+> ⚠️ Esto hace una llamada **real y facturable** a la API del proveedor configurado.
 
 ## Stack
 
 - **Spring Boot 3.4** (web + scheduling + SSE)
-- **SDK oficial de Anthropic para Java** (`anthropic-java`)
+- **SDK oficial de Anthropic para Java** (`anthropic-java`) y/o **OpenAI** (vía `RestClient`),
+  seleccionables por configuración detrás de la interfaz `LlmClient`.
 - **Data Dragon** (datos estáticos del parche de LoL)
 - **Live Client Data API** de Riot (estado de la partida en curso)
